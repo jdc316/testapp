@@ -12,9 +12,10 @@ import { Appointment } from 'src/app/models/appointment';
 import { AppointmentService } from 'src/app/services/appointment.service';
 
 @Component({
-  selector: 'app-appointment-list',
-  templateUrl: './appointment-list.component.html',
-  styleUrls: ['./appointment-list.component.scss'],
+    selector: 'app-appointment-list',
+    templateUrl: './appointment-list.component.html',
+    styleUrls: ['./appointment-list.component.scss'],
+    standalone: false
 })
 export class AppointmentListComponent implements OnInit, AfterViewInit {
   private appointmentService = inject(AppointmentService);
