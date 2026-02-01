@@ -2,61 +2,64 @@ import {
   AfterViewInit,
   Component,
   inject,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
-import { catchError, map, merge, of, startWith, switchMap } from 'rxjs';
+import { catchError, of, Subject, takeUntil } from 'rxjs';
 import { Appointment } from 'src/app/models/appointment';
 import { AppointmentService } from 'src/app/services/appointment.service';
 
 @Component({
-    selector: 'app-appointment-list',
-    templateUrl: './appointment-list.component.html',
-    styleUrls: ['./appointment-list.component.scss'],
-    standalone: false
+  selector: 'app-appointment-list',
+  templateUrl: './appointment-list.component.html',
+  styleUrls: ['./appointment-list.component.scss'],
+  standalone: false,
 })
-export class AppointmentListComponent implements OnInit, AfterViewInit {
+export class AppointmentListComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   private appointmentService = inject(AppointmentService);
-
-  public appointments: Appointment[] = [];
+  private destroySubject = new Subject();
+  public dataSource = new MatTableDataSource<Appointment>([]);
   public displayedColumns: string[] = ['date', 'time', 'clientName', 'status'];
-  resultsLength = 0;
+
+  // Results length is handled by dataSource automatically for client-side pagination,
+  // but if we want to show it explicitly or start empty we can keep track.
+  // However, usually dataSource.data handles it.
+  // We'll use dataSource for the table.
   isLoadingResults = true;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.appointmentService
+      .getAppointments()
+      .pipe(
+        takeUntil(this.destroySubject),
+        catchError(() => of([])),
+      )
+      .subscribe((data) => {
+        this.isLoadingResults = false;
+        this.dataSource.data = data;
+      });
+  }
 
   ngAfterViewInit(): void {
-    this.sort.sortChange.subscribe(() => (this.paginator.pageIndex = 0));
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
 
-    merge(this.sort.sortChange, this.paginator.page)
-      .pipe(
-        startWith({}),
-        switchMap(() => {
-          this.isLoadingResults = true;
-          return this.appointmentService!.getAppointments().pipe(
-            catchError(() => of(null)),
-          );
-        }),
-        map((data) => {
-          // Flip flag to show that loading has finished.
-          this.isLoadingResults = false;
+  ngOnDestroy(): void {
+    this.destroySubject.complete();
+    this.destroySubject.unsubscribe();
+  }
 
-          if (data === null) {
-            return [];
-          }
-
-          // Only refresh the result length if there is new data. In case of rate
-          // limit errors, we do not want to reset the paginator to zero, as that
-          // would prevent users from re-triggering requests.
-          this.resultsLength = this.appointments.length;
-          return this.appointments;
-        }),
-      )
-      .subscribe((data) => (this.appointments = data));
+  trackByAppointmentId(_index: number, item: Appointment): number {
+    return item.id;
   }
 }

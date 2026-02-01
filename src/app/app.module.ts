@@ -10,6 +10,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSortModule } from '@angular/material/sort';
 import { DatePipe } from '@angular/common';
 
 @NgModule({
@@ -21,6 +22,7 @@ import { DatePipe } from '@angular/common';
     MatTableModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatSortModule,
   ],
   providers: [AppointmentService, provideHttpClient(), DatePipe],
   bootstrap: [AppComponent],
