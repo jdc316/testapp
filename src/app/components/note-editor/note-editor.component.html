@@ -1,0 +1,88 @@
+<div class="container">
+  <div class="notes-section">
+    <h2>All Notes</h2>
+    @if (notes$ | async; as notes) {
+      <div class="notes-grid">
+        @for (note of notes; track note.id) {
+          <div class="note-card">
+            <div class="note-header">
+              <span class="note-title">{{ note.title }}</span>
+              <span class="note-date">{{
+                note.createdAt | date: "shortDate"
+              }}</span>
+            </div>
+            <p class="note-content">{{ note.content }}</p>
+            <div class="note-tags">
+              @for (tag of note.tags || []; track $index) {
+                <span class="tag-pill">{{ tag }}</span>
+              }
+            </div>
+            <div class="note-meta">
+              <small>Client: {{ note.clientId }}</small>
+              <button mat-icon-button class="edit-btn" (click)="editNote(note)">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="editor-section">
+    <h2>Create Note</h2>
+    <form class="note-form" (submit)="onSubmit($event)">
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input
+          [formField]="noteForm.title"
+          type="text"
+          matInput
+          placeholder="Ex. Meeting Notes"
+        />
+        <mat-icon matSuffix>title</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Content</mat-label>
+        <textarea
+          [formField]="noteForm.content"
+          matInput
+          rows="6"
+          placeholder="Write your note here..."
+        ></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="tags-field">
+        <mat-label>Tags</mat-label>
+        <mat-chip-grid
+          #chipGrid
+          aria-label="Enter tags"
+          [formField]="noteForm.tags"
+        >
+          @for (tag of note().tags; track $index) {
+            <mat-chip-row (removed)="removeTag(tag)">
+              {{ tag }}
+              <button matChipRemove [attr.aria-label]="'remove ' + tag">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip-row>
+          }
+          <input
+            placeholder="New tag..."
+            [matChipInputFor]="chipGrid"
+            (matChipInputTokenEnd)="addTag($event)"
+          />
+        </mat-chip-grid>
+        <mat-icon matSuffix>label</mat-icon>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit">
+          <mat-icon>save</mat-icon>
+          Save Note
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
